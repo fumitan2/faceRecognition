@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>表情で遊ぶカメラ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="loading-message">モデルを読み込み中...</div>
+    <div id="container">
+        <video id="video" width="720" height="560" autoplay muted playsinline></video>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <!-- face-api.jsライブラリの読み込み -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <!-- 自分のJavaScriptファイルの読み込み -->
+    <script defer src="script.js"></script>
+</body>
+</html>
