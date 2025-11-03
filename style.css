@@ -1,3 +1,14 @@
+/* CSS変数を定義し、デザインの一貫性を保ちやすくする */
+:root {
+    --background-color: #2c3e50;
+    --primary-color: #3498db;
+    --primary-hover-color: #2980b9;
+    --text-color: #ffffff;
+    --panel-background: rgba(0, 0, 0, 0.65);
+    --border-color: #555;
+    --border-radius: 8px;
+}
+
 html, body {
     height: 100%;
     width: 100%;
@@ -5,13 +16,13 @@ html, body {
     padding: 0;
     overflow: hidden;
     font-family: sans-serif;
+    background-color: var(--background-color);
 }
 
 body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #2c3e50;
 }
 
 #container {
@@ -27,7 +38,7 @@ video, canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 10px;
+    border-radius: var(--border-radius);
     object-fit: cover;
 }
 
@@ -36,73 +47,74 @@ video {
 }
 
 #loading-message {
-    color: white;
+    color: var(--text-color);
     font-size: 1.5em;
 }
 
-/* --- UIパネルとボタンのスタイル --- */
+/* --- UI --- */
 #toggle-ui-button {
     position: fixed;
     top: 20px;
     left: 20px;
     z-index: 20;
     padding: 10px 15px;
-    background-color: #3498db;
+    background-color: var(--primary-color);
     border: none;
-    color: white;
+    color: var(--text-color);
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
+    transition: background-color 0.2s;
 }
 
 #toggle-ui-button:hover {
-    background-color: #2980b9;
+    background-color: var(--primary-hover-color);
 }
 
-/* UIパネルコンテナ */
 #ui-container {
-    /* 最初は非表示にしておく */
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
 }
 
-/* 表示状態のスタイル */
 #ui-container.visible {
     opacity: 1;
     visibility: visible;
 }
 
-#controls, #debug-info {
+/* パネルの共通スタイル */
+.panel {
     position: fixed;
-    background-color: rgba(0, 0, 0, 0.6);
-    color: white;
+    background-color: var(--panel-background);
+    color: var(--text-color);
     padding: 15px;
-    border-radius: 8px;
+    border-radius: var(--border-radius);
     z-index: 10;
     width: 280px;
 }
 
 #controls {
-    /* ボタンの下に配置 */
-    top: 70px; 
+    top: 70px;
     left: 20px;
 }
 
 #debug-info {
-    /* 右上に配置 */
     top: 20px;
     right: 20px;
 }
 
-h4 {
+.panel h4 {
     margin-top: 0;
-    border-bottom: 1px solid #555;
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 5px;
 }
 
 .control-item {
     margin-bottom: 15px;
+}
+
+.control-item:last-child {
+    margin-bottom: 0;
 }
 
 .control-item label {

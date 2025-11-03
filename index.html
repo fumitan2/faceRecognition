@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>faceRecognition</title>
+    <title>Face Recognition App</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- ローディング表示 -->
     <div id="loading-message">モデルを読み込み中...</div>
+
+    <!-- カメラ映像と描画エリア -->
     <div id="container">
         <video id="video" autoplay muted playsinline></video>
         <canvas id="canvas"></canvas>
@@ -16,10 +20,10 @@
     <!-- UI表示切り替えボタン -->
     <button id="toggle-ui-button">設定</button>
 
-    <!-- UIパネルのコンテナ -->
-    <div id="ui-container"> <!-- 初期状態は非表示（CSSで制御） -->
-        <!-- 設定用コントロールパネル -->
-        <div id="controls">
+    <!-- UIパネルコンテナ -->
+    <div id="ui-container">
+        <!-- 設定パネル -->
+        <div id="controls" class="panel">
             <h4>設定パネル</h4>
             <div class="control-item">
                 <label for="resolution-selector">解像度:</label>
@@ -36,20 +40,18 @@
                 <label for="eye-threshold-slider">目の閾値: <span id="eye-threshold-value">0.15</span></label>
                 <input type="range" id="eye-threshold-slider" min="0.1" max="0.4" step="0.01" value="0.15">
             </div>
-            <!-- ★ここから新しいスライダーを追加 -->
             <div class="control-item">
                 <label for="open-eye-multiplier-slider">開いている目の倍率: <span id="open-eye-multiplier-value">1.2</span></label>
                 <input type="range" id="open-eye-multiplier-slider" min="1.0" max="2.0" step="0.1" value="1.2">
             </div>
-            <!-- ★ここまで -->
             <div class="control-item">
                 <label for="mouth-threshold-slider">口の閾値: <span id="mouth-threshold-value">0.15</span> (顔比)</label>
                 <input type="range" id="mouth-threshold-slider" min="0.05" max="0.4" step="0.01" value="0.15">
             </div>
         </div>
 
-        <!-- リアルタイム数値表示 -->
-        <div id="debug-info">
+        <!-- リアルタイム情報パネル -->
+        <div id="debug-info" class="panel">
             <h4>リアルタイム情報</h4>
             <p>左目アスペクト比: <span id="left-eye-value">-</span></p>
             <p>右目アスペクト比: <span id="right-eye-value">-</span></p>
@@ -57,6 +59,7 @@
         </div>
     </div>
 
+    <!-- 外部ライブラリと自作スクリプトの読み込み -->
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <script defer src="script.js"></script>
 </body>
