@@ -1,5 +1,6 @@
 // --- グローバル変数と定数 ---
 const dom = {}; // DOM要素をキャッシュするオブジェクト
+const audio = {}; // Audioオブジェクトをキャッシュするオブジェクト
 let latestLandmarks = null; // 最新の顔ランドマーク情報
 
 // 設定値を管理するオブジェクト
@@ -17,6 +18,7 @@ window.addEventListener('DOMContentLoaded', main);
 
 function main() {
     cacheDOMElements();
+    cacheAudioElements(); // Audio要素をキャッシュする関数を追加
     setupEventListeners();
     initializeApp();
 }
@@ -38,6 +40,26 @@ function cacheDOMElements() {
         dom[key] = document.getElementById(id);
     });
 }
+
+/**
+ * ▼▼▼ [新規追加] 音声ファイルを読み込み、キャッシュする ▼▼▼
+ */
+function cacheAudioElements() {
+    audio.jankenpon = new Audio('audio/jankenpon.m4a');
+    audio.yappy = new Audio('audio/yappy.m4a');
+    audio.zuko = new Audio('audio/zuko.m4a');
+    audio.aikodesho = new Audio('audio/aikodesho.m4a');
+}
+
+/**
+ * ▼▼▼ [新規追加] 音声を再生するヘルパー関数 ▼▼▼
+ * @param {HTMLAudioElement} audioElement 再生するオーディオ要素
+ */
+function playAudio(audioElement) {
+    audioElement.currentTime = 0;
+    audioElement.play().catch(error => console.error("音声の再生に失敗しました:", error));
+}
+
 
 /**
  * すべてのイベントリスナーを設定する
@@ -75,7 +97,7 @@ async function initializeApp() {
 
         dom.video.addEventListener('play', () => {
             dom.loadingMessage.style.display = 'none';
-            dom.container.style.display = 'block'; // ← この行を追加！
+            dom.container.style.display = 'block';
             detectFacesLoop();
         });
     } catch (err) {
@@ -85,8 +107,7 @@ async function initializeApp() {
 }
 
 
-
-// --- カメラ・顔認識関連 ---
+// --- カメラ・顔認識関連 (このセクションは変更なし) ---
 async function startVideo() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
@@ -108,69 +129,110 @@ async function detectFacesLoop() {
         updateRealtimeInfo(latestLandmarks);
     } else {
         latestLandmarks = null;
-        // 顔が検出されない場合は表示をリセット
         dom.leftEyeValue.textContent = '-';
         dom.rightEyeValue.textContent = '-';
         dom.mouthValue.textContent = '-';
     }
-
     requestAnimationFrame(detectFacesLoop);
 }
 
-/**
- * リアルタイム情報パネルを更新する
- * @param {faceapi.FaceLandmarks68} landmarks 
- */
 function updateRealtimeInfo(landmarks) {
     const leftEyeAspectRatio = getEyeAspectRatio(landmarks.getLeftEye());
     const rightEyeAspectRatio = getEyeAspectRatio(landmarks.getRightEye());
     const mouthOpenRatio = getMouthOpenRatio(landmarks);
-
     dom.leftEyeValue.textContent = leftEyeAspectRatio.toFixed(3);
     dom.rightEyeValue.textContent = rightEyeAspectRatio.toFixed(3);
     dom.mouthValue.textContent = mouthOpenRatio.toFixed(3);
 }
 
 
-// --- じゃんけんゲームのロジック ---
+// --- ▼▼▼ じゃんけんゲームのロジック (大幅に修正) ▼▼▼ ---
+
+/**
+ * ゲーム開始のトリガー
+ */
 function startGame() {
     dom.jankenButton.disabled = true;
     resetUI();
 
+    // 「じゃん・けん・ポン」のカウントダウンを開始
     setTimeout(() => { dom.countdown.textContent = "じゃん"; }, 0);
     setTimeout(() => { dom.countdown.textContent = "けん"; }, 1000);
     setTimeout(() => {
         dom.countdown.textContent = "ポン！";
-        playJanken();
-        dom.jankenButton.disabled = false;
+        playAudio(audio.jankenpon);
+        evaluateJanken(); // 判定処理を呼び出す
     }, 2000);
 }
 
-function playJanken() {
-    // 「ポン」の瞬間の顔の状態を取得・保存
+/**
+ * 「ポン」または「しょ」のタイミングで呼ばれる判定処理
+ */
+function evaluateJanken() {
     const snapshot = takeSnapshot();
-
     const playerHand = determinePlayerHand(snapshot);
     const computerHand = determineComputerHand();
     const result = judgeResult(playerHand, computerHand);
 
-    updateResultUI(playerHand, computerHand, result, snapshot);
+    // UIに手を表示し、スナップショットの値も更新
+    dom.playerHand.textContent = HANDS[playerHand];
+    dom.computerHand.textContent = HANDS[computerHand];
+    if (snapshot.detected) {
+        dom.snapLeftEye.textContent = snapshot.leftEye.toFixed(3);
+        dom.snapRightEye.textContent = snapshot.rightEye.toFixed(3);
+        dom.snapMouth.textContent = snapshot.mouth.toFixed(3);
+    }
+
+    if (result === 'あいこ') {
+        dom.gameResult.textContent = "あいこで...";
+        handleAiko(); // あいこ処理へ
+    } else {
+        showFinalResult(result); // 最終結果表示処理へ
+    }
 }
 
+/**
+ * あいこの場合の処理
+ */
+function handleAiko() {
+    playAudio(audio.aikodesho);
+    setTimeout(() => { dom.countdown.textContent = "あい"; }, 500);
+    setTimeout(() => { dom.countdown.textContent = "こで"; }, 1200);
+    setTimeout(() => {
+        dom.countdown.textContent = "しょ！";
+        evaluateJanken(); // 再度判定
+    }, 1900);
+}
+
+/**
+ * 最終結果（勝ち/負け）を表示する処理
+ * @param {string} result '勝ち！🎉' または '負け...😢'
+ */
+function showFinalResult(result) {
+    dom.gameResult.textContent = result;
+    if (result.includes('勝ち')) {
+        playAudio(audio.yappy);
+    } else {
+        playAudio(audio.zuko);
+    }
+    // ゲーム終了後、ボタンを再度有効化
+    dom.jankenButton.disabled = false;
+}
+
+/**
+ * UIをゲーム開始前の状態にリセットする
+ */
 function resetUI() {
     dom.playerHand.textContent = '❓';
     dom.computerHand.textContent = '❓';
-    dom.gameResult.textContent = "";
+    dom.gameResult.textContent = "ボタンを押してスタート！";
     dom.countdown.textContent = "";
-    // スナップショット表示もリセット
     dom.snapLeftEye.textContent = '-';
     dom.snapRightEye.textContent = '-';
     dom.snapMouth.textContent = '-';
 }
 
-/**
- * 現在の顔のパラメータのスナップショットを取得する
- */
+// --- 判定・計算ヘルパー関数 (このセクションは変更なし) ---
 function takeSnapshot() {
     if (!latestLandmarks) {
         return { leftEye: 0, rightEye: 0, mouth: 0, detected: false };
@@ -183,32 +245,14 @@ function takeSnapshot() {
     };
 }
 
-/**
- * プレイヤーの手を表情から決定する
- * @param {object} snapshot 「ポン」の瞬間の顔パラメータ
- * @returns {'rock' | 'scissors' | 'paper'}
- */
 function determinePlayerHand(snapshot) {
-    if (!snapshot.detected) {
-        return HAND_TYPES[Math.floor(Math.random() * 3)]; // 顔が未検出ならランダム
-    }
-
-    // パー：口の開きを最優先
-    if (snapshot.mouth > settings.mouthThreshold) {
-        return 'paper';
-    }
-    // グー：左目ウインク
+    if (!snapshot.detected) return HAND_TYPES[Math.floor(Math.random() * 3)];
+    if (snapshot.mouth > settings.mouthThreshold) return 'paper';
     const isLeftWink = snapshot.leftEye < settings.eyeThreshold && snapshot.rightEye > settings.eyeThreshold * settings.openEyeMultiplier;
-    if (isLeftWink) {
-        return 'rock';
-    }
-    // チョキ：右目ウインク
+    if (isLeftWink) return 'rock';
     const isRightWink = snapshot.rightEye < settings.eyeThreshold && snapshot.leftEye > settings.eyeThreshold * settings.openEyeMultiplier;
-    if (isRightWink) {
-        return 'scissors';
-    }
-
-    return 'rock'; // どれにも当てはまらない場合はグー
+    if (isRightWink) return 'scissors';
+    return 'rock';
 }
 
 function determineComputerHand() {
@@ -225,24 +269,6 @@ function judgeResult(player, computer) {
     return '負け...😢';
 }
 
-/**
- * UIに最終結果とスナップショットを表示する
- */
-function updateResultUI(playerHand, computerHand, result, snapshot) {
-    dom.playerHand.textContent = HANDS[playerHand];
-    dom.computerHand.textContent = HANDS[computerHand];
-    dom.gameResult.textContent = result;
-
-    // スナップショットの値を表示
-    if (snapshot.detected) {
-        dom.snapLeftEye.textContent = snapshot.leftEye.toFixed(3);
-        dom.snapRightEye.textContent = snapshot.rightEye.toFixed(3);
-        dom.snapMouth.textContent = snapshot.mouth.toFixed(3);
-    }
-}
-
-
-// --- 顔パーツの計算ヘルパー関数 (変更なし) ---
 function getEyeAspectRatio(eye) {
     const v1 = Math.hypot(eye[1].x - eye[5].x, eye[1].y - eye[5].y);
     const v2 = Math.hypot(eye[2].x - eye[4].x, eye[2].y - eye[4].y);
