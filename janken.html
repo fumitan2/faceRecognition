@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>じゃんけんゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="janken-page"> <!-- ← class="janken-page" を追加 -->
+
+    <!-- ローディング表示 -->
+    <div id="loading-message">カメラとモデルを準備中...</div>
+
+    <!-- カメラ映像と描画エリア (UIの背景に表示) -->
+    <div id="container">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <!-- ▼▼▼ UI全体のコンテナ ▼▼▼ -->
+    <div id="game-ui-container">
+        <!-- 左パネル: ゲーム操作 -->
+        <div id="game-controls" class="panel">
+            <h2 id="countdown">じゃんけん...</h2>
+            <div id="result-display">
+                <p>あなた: <span id="player-hand">❓</span></p>
+                <p>コンピュータ: <span id="computer-hand">❓</span></p>
+            </div>
+            <p id="game-result">ボタンを押してスタート！</p>
+            <button id="janken-button" class="janken-btn">じゃんけんポン！</button>
+            <a href="index.html" class="back-btn">トップへ戻る</a>
+        </div>
+
+        <!-- 右パネル: 情報と設定 -->
+        <div id="info-panel" class="panel">
+            <h4>リアルタイム情報</h4>
+            <p>左目 開き具合: <span id="left-eye-value">-</span></p>
+            <p>右目 開き具合: <span id="right-eye-value">-</span></p>
+            <p>口 開き具合: <span id="mouth-value">-</span></p>
+
+            <hr>
+
+            <h4>感度設定</h4>
+            <div class="control-item">
+                <label for="eye-threshold-slider">目の閾値 (小さいと閉じやすい): <span id="eye-threshold-value">0.15</span></label>
+                <input type="range" id="eye-threshold-slider" min="0.1" max="0.4" step="0.01" value="0.15">
+            </div>
+            <div class="control-item">
+                <label for="mouth-threshold-slider">口の閾値 (小さいと開きやすい): <span id="mouth-threshold-value">0.15</span></label>
+                <input type="range" id="mouth-threshold-slider" min="0.05" max="0.4" step="0.01" value="0.15">
+            </div>
+
+            <hr>
+
+            <h4>「ポン」の瞬間の値</h4>
+            <p>左目: <span id="snap-left-eye">-</span></p>
+            <p>右目: <span id="snap-right-eye">-</span></p>
+            <p>口: <span id="snap-mouth">-</span></p>
+        </div>
+    </div>
+    <!-- ▲▲▲ UI全体のコンテナ ▲▲▲ -->
+
+    <!-- 外部ライブラリと自作スクリプトの読み込み -->
+    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script defer src="janken.js"></script>
+</body>
+</html>
