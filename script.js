@@ -3,38 +3,73 @@ const canvas = document.getElementById('canvas');
 const loadingMessage = document.getElementById('loading-message');
 const container = document.getElementById('container');
 
-// 表示する画像をあらかじめ読み込んでおく
+// --- UI要素を取得 ---
+const toggleUiButton = document.getElementById('toggle-ui-button'); // ★追加
+const uiContainer = document.getElementById('ui-container');       // ★追加
+const resolutionSelector = document.getElementById('resolution-selector');
+const intervalSlider = document.getElementById('interval-slider');
+const eyeThresholdSlider = document.getElementById('eye-threshold-slider');
+const mouthThresholdSlider = document.getElementById('mouth-threshold-slider');
+const intervalValueSpan = document.getElementById('interval-value');
+const eyeThresholdValueSpan = document.getElementById('eye-threshold-value');
+const mouthThresholdValueSpan = document.getElementById('mouth-threshold-value');
+const leftEyeValueSpan = document.getElementById('left-eye-value');
+const rightEyeValueSpan = document.getElementById('right-eye-value');
+const mouthValueSpan = document.getElementById('mouth-value');
+
+// --- パラメータの変数 ---
+let intervalTime = parseInt(intervalSlider.value);
+let eyeThreshold = parseFloat(eyeThresholdSlider.value);
+let mouthThreshold = parseFloat(mouthThresholdSlider.value);
+
+// --- 画像の読み込み ---
 const openMouthImage = new Image();
 openMouthImage.src = 'images/mouth_open.png';
 const winkEyeImage = new Image();
 winkEyeImage.src = 'images/wink_eye.png';
 
-// face-api.jsのモデルを読み込む関数
+// --- イベントリスナーの設定 ---
+toggleUiButton.addEventListener('click', () => {
+    uiContainer.classList.toggle('visible');
+});
+
+resolutionSelector.addEventListener('change', () => {
+    // 既存のビデオストリームを停止
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+    }
+    startVideo();
+});
+intervalSlider.addEventListener('input', e => {
+    intervalTime = parseInt(e.target.value);
+    intervalValueSpan.textContent = intervalTime;
+});
+eyeThresholdSlider.addEventListener('input', e => {
+    eyeThreshold = parseFloat(e.target.value);
+    eyeThresholdValueSpan.textContent = eyeThreshold.toFixed(2);
+});
+mouthThresholdSlider.addEventListener('input', e => {
+    mouthThreshold = parseFloat(e.target.value);
+    mouthThresholdValueSpan.textContent = mouthThreshold.toFixed(2);
+});
+
+// --- face-api.jsのモデル読み込み ---
 async function loadModels() {
-    // 処理が軽いTinyモデルを使用
     await faceapi.nets.tinyFaceDetector.loadFromUri('./models');
     await faceapi.nets.faceLandmark68TinyNet.loadFromUri('./models');
 }
 
-// カメラを起動する関数
-// async function startVideo() {
-//     try {
-//         const stream = await navigator.mediaDevices.getUserMedia({
-//             video: {}
-//         });
-//         video.srcObject = stream;
-//     } catch (err) {
-//         console.error(err);
-//         alert('カメラの起動に失敗しました。カメラへのアクセスを許可してください。');
-//     }
-// }
+// --- カメラ起動 ---
 async function startVideo() {
+    const selectedOption = resolutionSelector.value.split('x');
+    const width = parseInt(selectedOption[0]);
+    const height = parseInt(selectedOption[1]);
+
     try {
-        // 解像度を指定してカメラを取得
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
-                width: { ideal: 640 },  // 幅を640pxに
-                height: { ideal: 480 } // 高さを480pxに
+                width: { ideal: width },
+                height: { ideal: height }
             }
         });
         video.srcObject = stream;
@@ -44,97 +79,55 @@ async function startVideo() {
     }
 }
 
-// 顔検出と描画を行うメインの処理
-async function detectFaces() {
-    const context = canvas.getContext('2d');
+// --- 顔検出のメインループ ---
+async function detectFacesLoop() {
+    const context = canvas.getContext('2d', { willReadFrequently: true }); // パフォーマンス警告対策
 
-    // 100ミリ秒ごとに顔を検出し続ける
-    setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-            .withFaceLandmarks(true); // 顔のパーツ（ランドマーク）も検出する
+    const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks(true);
 
-        // canvasのサイズをvideoに合わせる
-        const displaySize = { width: video.clientWidth, height: video.clientHeight };
-        faceapi.matchDimensions(canvas, displaySize);
-        const resizedDetections = faceapi.resizeResults(detections, displaySize);
+    const displaySize = { width: video.clientWidth, height: video.clientHeight };
+    faceapi.matchDimensions(canvas, displaySize);
+    const resizedDetections = faceapi.resizeResults(detections, displaySize);
 
-        // canvasをクリア
-        context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+
+    if (resizedDetections && resizedDetections.length > 0) {
+        const landmarks = resizedDetections[0].landmarks;
+
+        // リアルタイム数値を計算して表示
+        const leftEyeAspectRatio = getEyeAspectRatio(landmarks.getLeftEye());
+        const rightEyeAspectRatio = getEyeAspectRatio(landmarks.getRightEye());
+        const mouthOpenRatio = getMouthOpenRatio(landmarks);
+        leftEyeValueSpan.textContent = leftEyeAspectRatio.toFixed(2);
+        rightEyeValueSpan.textContent = rightEyeAspectRatio.toFixed(2);
+        mouthValueSpan.textContent = mouthOpenRatio.toFixed(2);
         
-        // 鏡写しにするためcanvasも左右反転
-        context.translate(canvas.width, 0);
-        context.scale(-1, 1);
+        // 判定ロジック
+        const isMouthOpen = mouthOpenRatio > mouthThreshold;
+        const winkState = checkWink(leftEyeAspectRatio, rightEyeAspectRatio);
 
-        if (resizedDetections && resizedDetections.length > 0) {
-            const landmarks = resizedDetections[0].landmarks;
-
-            // --- 判定ロジック ---
-            const isMouthOpen = checkMouthOpen(landmarks);
-            const winkState = checkWink(landmarks);
-
-            // --- 描画ロジック ---
-            if (isMouthOpen) {
-                // 口が開いていれば、顔全体を置き換え
-                const box = resizedDetections[0].detection.box;
-                context.drawImage(openMouthImage, box.x, box.y, box.width, box.height);
-            } else if (winkState.isWinking) {
-                // ウィンクしていれば、閉じている目に画像を描画
-                const eyeToDrawOn = winkState.winkedEye === 'left' ? landmarks.getLeftEye() : landmarks.getRightEye();
-                const eyeCenterX = eyeToDrawOn.reduce((sum, pos) => sum + pos.x, 0) / eyeToDrawOn.length;
-                const eyeCenterY = eyeToDrawOn.reduce((sum, pos) => sum + pos.y, 0) / eyeToDrawOn.length;
-                const eyeWidth = landmarks.getJawOutline()[16].x - landmarks.getJawOutline()[0].x; // 顎の幅を目安に画像の大きさを決める
-                const imageSize = eyeWidth * 0.3; // 目に合わせる画像のサイズ調整
-                context.drawImage(winkEyeImage, eyeCenterX - imageSize / 2, eyeCenterY - imageSize / 2, imageSize, imageSize);
-            }
+        // 描画ロジック
+        if (isMouthOpen) {
+            const box = resizedDetections[0].detection.box;
+            context.drawImage(openMouthImage, box.x, box.y, box.width, box.height);
+        } else if (winkState.isWinking) {
+            const eyeToDrawOn = winkState.winkedEye === 'left' ? landmarks.getLeftEye() : landmarks.getRightEye();
+            const eyeCenterX = eyeToDrawOn.reduce((sum, pos) => sum + pos.x, 0) / eyeToDrawOn.length;
+            const eyeCenterY = eyeToDrawOn.reduce((sum, pos) => sum + pos.y, 0) / eyeToDrawOn.length;
+            const eyeWidth = landmarks.getJawOutline()[16].x - landmarks.getJawOutline()[0].x;
+            const imageSize = eyeWidth * 0.3;
+            context.drawImage(winkEyeImage, eyeCenterX - imageSize / 2, eyeCenterY - imageSize / 2, imageSize, imageSize);
         }
-    }, 100);
-}
-
-// 口の開き具合を判定する関数
-function checkMouthOpen(landmarks) {
-    const upperLipTop = landmarks.getMouth()[2]; // 上唇の上
-    const lowerLipBottom = landmarks.getMouth()[9]; // 下唇の下
-    const mouthOpening = lowerLipBottom.y - upperLipTop.y;
-    
-    const jawOutline = landmarks.getJawOutline();
-    const faceHeight = jawOutline[8].y - jawOutline[0].y; // 顔の高さの目安
-    
-    // 口の開きが顔の高さの15%以上なら「開いている」と判定
-    return mouthOpening > faceHeight * 0.15;
-}
-
-// ウィンクを判定する関数
-function checkWink(landmarks) {
-    const leftEye = landmarks.getLeftEye();
-    const rightEye = landmarks.getRightEye();
-
-    const leftEyeAspectRatio = getEyeAspectRatio(leftEye);
-    const rightEyeAspectRatio = getEyeAspectRatio(rightEye);
-
-    // --- ここからデバッグ用のコードを追加 ---
-    // コンソールに左右の目のアスペクト比を常時出力する
-    // toFixed(2) は小数点以下2桁まで表示するという意味です
-    console.log(`Left Eye: ${leftEyeAspectRatio.toFixed(2)}, Right Eye: ${rightEyeAspectRatio.toFixed(2)}`);
-    // --- ここまで ---
-
-    // 目のアスペクト比の閾値（この値を後で調整します）
-    const EYE_AR_THRESH = 0.3;
-
-    let isWinking = false;
-    let winkedEye = null;
-
-    if (leftEyeAspectRatio < EYE_AR_THRESH && rightEyeAspectRatio > EYE_AR_THRESH) {
-        isWinking = true;
-        winkedEye = 'left';
-    } else if (rightEyeAspectRatio < EYE_AR_THRESH && leftEyeAspectRatio > EYE_AR_THRESH) {
-        isWinking = true;
-        winkedEye = 'right';
     }
-    
-    return { isWinking, winkedEye };
+
+    // 次のループを予約
+    setTimeout(detectFacesLoop, intervalTime);
 }
 
-// 目のアスペクト比（縦横比）を計算するヘルパー関数
+// --- ヘルパー関数群 ---
 function getEyeAspectRatio(eye) {
     const verticalDist1 = Math.hypot(eye[1].x - eye[5].x, eye[1].y - eye[5].y);
     const verticalDist2 = Math.hypot(eye[2].x - eye[4].x, eye[2].y - eye[4].y);
@@ -142,17 +135,40 @@ function getEyeAspectRatio(eye) {
     return (verticalDist1 + verticalDist2) / (2.0 * horizontalDist);
 }
 
+function getMouthOpenRatio(landmarks) {
+    const upperLipTop = landmarks.getMouth()[2];
+    const lowerLipBottom = landmarks.getMouth()[9];
+    const mouthOpening = lowerLipBottom.y - upperLipTop.y;
+    const jawOutline = landmarks.getJawOutline();
+    if (jawOutline.length < 17) return 0;
+    const faceHeight = jawOutline[8].y - jawOutline[0].y;
+    return faceHeight > 0 ? mouthOpening / faceHeight : 0;
+}
 
-// --- メインの実行処理 ---
+function checkWink(leftEyeAspectRatio, rightEyeAspectRatio) {
+    let isWinking = false;
+    let winkedEye = null;
+    const EYE_AR_THRESH = eyeThreshold; // UIから取得した閾値を使用
+
+    if (leftEyeAspectRatio < EYE_AR_THRESH && rightEyeAspectRatio > EYE_AR_THRESH * 1.5) { // 片目が開いていることを明確にする
+        isWinking = true;
+        winkedEye = 'left';
+    } else if (rightEyeAspectRatio < EYE_AR_THRESH && leftEyeAspectRatio > EYE_AR_THRESH * 1.5) {
+        isWinking = true;
+        winkedEye = 'right';
+    }
+    return { isWinking, winkedEye };
+}
+
+// --- メイン実行処理 ---
 async function main() {
     await loadModels();
     await startVideo();
     
     video.addEventListener('play', () => {
-        // ロードメッセージを非表示にし、コンテナを表示
         loadingMessage.style.display = 'none';
         container.style.display = 'block';
-        detectFaces();
+        detectFacesLoop(); // メインループを開始
     });
 }
 

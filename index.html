@@ -9,13 +9,49 @@
 <body>
     <div id="loading-message">モデルを読み込み中...</div>
     <div id="container">
-        <video id="video" width="720" height="560" autoplay muted playsinline></video>
+        <video id="video" autoplay muted playsinline></video>
         <canvas id="canvas"></canvas>
     </div>
 
-    <!-- face-api.jsライブラリの読み込み -->
+    <!-- UI表示切り替えボタン -->
+    <button id="toggle-ui-button">設定</button>
+
+    <!-- UIパネルのコンテナ -->
+    <div id="ui-container" class="visible">
+        <!-- 設定用コントロールパネル -->
+        <div id="controls">
+            <h4>設定パネル</h4>
+            <div class="control-item">
+                <label for="resolution-selector">解像度:</label>
+                <select id="resolution-selector">
+                    <option value="640x480">640 x 480</option>
+                    <option value="1280x720">1280 x 720</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label for="interval-slider">処理周期: <span id="interval-value">200</span> ms</label>
+                <input type="range" id="interval-slider" min="100" max="1000" step="50" value="200">
+            </div>
+            <div class="control-item">
+                <label for="eye-threshold-slider">目の閾値: <span id="eye-threshold-value">0.15</span></label>
+                <input type="range" id="eye-threshold-slider" min="0.1" max="0.4" step="0.01" value="0.15">
+            </div>
+            <div class="control-item">
+                <label for="mouth-threshold-slider">口の閾値: <span id="mouth-threshold-value">0.15</span> (顔比)</label>
+                <input type="range" id="mouth-threshold-slider" min="0.05" max="0.4" step="0.01" value="0.15">
+            </div>
+        </div>
+
+        <!-- リアルタイム数値表示 -->
+        <div id="debug-info">
+            <h4>リアルタイム情報</h4>
+            <p>左目アスペクト比: <span id="left-eye-value">-</span></p>
+            <p>右目アスペクト比: <span id="right-eye-value">-</span></p>
+            <p>口の開き具合: <span id="mouth-value">-</span></p>
+        </div>
+    </div>
+
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-    <!-- 自分のJavaScriptファイルの読み込み -->
     <script defer src="script.js"></script>
 </body>
 </html>
