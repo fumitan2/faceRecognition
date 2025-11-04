@@ -39,10 +39,10 @@ function cacheDOMElements() {
 }
 
 function cacheAudioElements() {
-    audio.jankenpon = new Audio('jankenpon.m4a');
-    audio.yappy = new Audio('yappy.m4a');
-    audio.zuko = new Audio('zuko.m4a');
-    audio.aikodesho = new Audio('aikodesho.m4a');
+    audio.jankenpon = new Audio('audio/jankenpon.m4a');
+    audio.yappy = new Audio('audio/yappy.m4a');
+    audio.zuko = new Audio('audio/zuko.m4a');
+    audio.aikodesho = new Audio('audio/aikodesho.m4a');
 }
 
 function playAudio(audioElement) {
@@ -156,7 +156,7 @@ function startGame() {
     dom.jankenButton.disabled = true;
     resetUI();
     
-    playAudio(audio.jankenpon); // 「ポン」の表示と同時に音声を再生
+    playAudio(audio.jankenpon); // 「じゃん」の表示と同時に音声を再生
     setTimeout(() => { dom.countdown.textContent = "じゃん"; }, 0);
     setTimeout(() => { dom.countdown.textContent = "けん"; }, 1000);
     setTimeout(() => {
