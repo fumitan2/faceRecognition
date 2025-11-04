@@ -151,12 +151,11 @@ function updateRealtimeInfo(landmarks) {
 function startGame() {
     dom.jankenButton.disabled = true;
     resetUI();
-
+    playAudio(audio.jankenpon);
     setTimeout(() => { dom.countdown.textContent = "じゃん"; }, 0);
     setTimeout(() => { dom.countdown.textContent = "けん"; }, 1000);
     setTimeout(() => {
         dom.countdown.textContent = "ポン！";
-        playAudio(audio.jankenpon);
         setTimeout(() => {
             evaluateJanken();
         }, 600);
