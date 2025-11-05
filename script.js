@@ -1,4 +1,4 @@
-// アプリケーション全体の状態を管理するオブジェクト
+// アプリケーション全体の状態を管理するオブジェクトmouth
 const appState = {
     intervalTime: 200,
     eyeThreshold: 0.15,
@@ -46,7 +46,8 @@ function cacheDOMElements() {
  * 使用する画像を読み込む
  */
 function loadImages() {
-    images.mouth.src = 'images/mouth_open.png';
+    //images.mouth.src = 'images/mouth_open.png';
+    images.mouth.src = 'images/mlogo.png';
     images.wink.src = 'images/wink_eye.png';
 }
 
