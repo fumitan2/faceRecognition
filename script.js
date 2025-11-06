@@ -47,7 +47,7 @@ function cacheDOMElements() {
  */
 function loadImages() {
     //images.mouth.src = 'images/mouth_open.png';
-    images.mouth.src = 'images/mlogo.png';
+    images.mouth.src = 'images/mlogo.gif';
     images.wink.src = 'images/wink_eye.png';
 }
 
