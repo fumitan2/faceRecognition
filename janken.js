@@ -30,7 +30,8 @@ function cacheDOMElements() {
         'eye-threshold-slider', 'eye-threshold-value',
         'mouth-threshold-slider', 'mouth-threshold-value',
         'snap-left-eye', 'snap-right-eye', 'snap-mouth',
-        'toggle-settings-button', 'info-panel'
+        'toggle-settings-button', 'info-panel',
+        'current-hand-guess'
     ];
     ids.forEach(id => {
         const key = id.replace(/-(\w)/g, (_, c) => c.toUpperCase());
@@ -135,6 +136,7 @@ async function detectFacesLoop() {
         dom.leftEyeValue.textContent = '-';
         dom.rightEyeValue.textContent = '-';
         dom.mouthValue.textContent = '-';
+        dom.currentHandGuess.textContent = '(顔が映っていません)';
     }
     requestAnimationFrame(detectFacesLoop);
 }
@@ -146,6 +148,18 @@ function updateRealtimeInfo(landmarks) {
     dom.leftEyeValue.textContent = leftEyeAspectRatio.toFixed(3);
     dom.rightEyeValue.textContent = rightEyeAspectRatio.toFixed(3);
     dom.mouthValue.textContent = mouthOpenRatio.toFixed(3);
+
+    // 現在のパラメータから、どの手になるかをリアルタイムで判定する
+    const currentSnapshot = {
+        leftEye: leftEyeAspectRatio,
+        rightEye: rightEyeAspectRatio,
+        mouth: mouthOpenRatio,
+        detected: true
+    };
+    const guessedHand = determinePlayerHand(currentSnapshot);
+
+    // 画面に判定結果を表示する
+    dom.currentHandGuess.textContent = HANDS[guessedHand];
 }
 
 function startGame() {
