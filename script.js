@@ -50,7 +50,7 @@ function cacheDOMElements() {
 function loadImages() {
     //images.mouth.src = 'images/mouth_open.png';
     // ★ 口の連番画像を読み込む
-    const MOUTH_FRAME_COUNT = 6; // 画像の枚数を指定
+    const MOUTH_FRAME_COUNT = 5; // 画像の枚数を指定
     for (let i = 0; i < MOUTH_FRAME_COUNT; i++) {
         const img = new Image();
         // ファイル名を 'mouse00.png', 'mouse01.png', ... のように生成
