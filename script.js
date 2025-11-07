@@ -4,6 +4,7 @@ const appState = {
     eyeThreshold: 0.15,
     openEyeMultiplier: 1.2,
     mouthThreshold: 0.15,
+    mouthFrameIndex: 0, // ★ 口のアニメーションフレーム番号を追加
 };
 
 // DOM要素をまとめて管理するオブジェクト
@@ -11,7 +12,8 @@ const domElements = {};
 
 // 画像リソースを管理するオブジェクト
 const images = {
-    mouth: new Image(),
+    mouthFrames: [], // ★ 口の画像を配列で管理するように変更
+    //mouth: new Image(),
     wink: new Image(),
 };
 
@@ -47,7 +49,15 @@ function cacheDOMElements() {
  */
 function loadImages() {
     //images.mouth.src = 'images/mouth_open.png';
-    images.mouth.src = 'images/mlogo.gif';
+    // ★ 口の連番画像を読み込む
+    const MOUTH_FRAME_COUNT = 6; // 画像の枚数を指定
+    for (let i = 0; i < MOUTH_FRAME_COUNT; i++) {
+        const img = new Image();
+        // ファイル名を 'mouse00.png', 'mouse01.png', ... のように生成
+        img.src = `images/mlogo${i.toString().padStart(2, '0')}.png`;
+        images.mouthFrames.push(img);
+    }
+    //images.mouth.src = 'images/mlogo.gif';
     images.wink.src = 'images/wink_eye.png';
 }
 
@@ -192,7 +202,15 @@ function drawOverlays(detections) {
 
     if (isMouthOpen) {
         const box = resizedDetections[0].detection.box;
-        drawImageWithAspectRatio(context, images.mouth, box);
+        // ★ 現在のフレーム番号の画像を描画
+        const currentFrame = images.mouthFrames[appState.mouthFrameIndex];
+        drawImageWithAspectRatio(context, currentFrame, box);
+
+        // ★ 次のフレームのためにインデックスを更新（ループさせる）
+        appState.mouthFrameIndex = (appState.mouthFrameIndex + 1) % images.mouthFrames.length;
+
+        //const box = resizedDetections[0].detection.box;
+        //drawImageWithAspectRatio(context, images.mouth, box);
     } else if (winkState.isWinking) {
         const eyeToDrawOn = winkState.winkedEye === 'left' ? landmarks.getLeftEye() : landmarks.getRightEye();
         const eyeWidth = Math.hypot(eyeToDrawOn[3].x - eyeToDrawOn[0].x, eyeToDrawOn[3].y - eyeToDrawOn[0].y);
