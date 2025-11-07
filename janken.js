@@ -236,18 +236,29 @@ function determinePlayerHand(snapshot) {
     if (!snapshot.detected) {
         return HAND_TYPES[Math.floor(Math.random() * 3)];
     }
-    if (snapshot.mouth > settings.mouthThreshold) {
-        return 'paper';
-    }
-    const isLeftWink = snapshot.leftEye < settings.eyeThreshold && snapshot.rightEye > settings.eyeThreshold * settings.openEyeMultiplier;
-    if (isLeftWink) {
-        return 'rock';
-    }
-    const isRightWink = snapshot.rightEye < settings.eyeThreshold && snapshot.leftEye > settings.eyeThreshold * settings.openEyeMultiplier;
-    if (isRightWink) {
+    // if (snapshot.mouth > settings.mouthThreshold) {
+    //     return 'paper';
+    // }
+    // const isLeftWink = snapshot.leftEye < settings.eyeThreshold && snapshot.rightEye > settings.eyeThreshold * settings.openEyeMultiplier;
+    // if (isLeftWink) {
+    //     return 'rock';
+    // }
+    // const isRightWink = snapshot.rightEye < settings.eyeThreshold && snapshot.leftEye > settings.eyeThreshold * settings.openEyeMultiplier;
+    // if (isRightWink) {
+    //     return 'scissors';
+    // }
+    if (snapshot.leftEye > settings.eyeThreshold * settings.openEyeMultiplier) {
         return 'scissors';
     }
-    return 'rock';
+    else if (snapshot.rightEye > settings.eyeThreshold * settings.openEyeMultiplier) {
+        return 'scissors';
+    }
+    else if (snapshot.mouth > settings.mouthThreshold) {
+        return 'paper';
+    }
+    else {
+        return 'rock';
+    }
 }
 
 function determineComputerHand() {
