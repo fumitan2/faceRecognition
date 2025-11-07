@@ -83,6 +83,29 @@ video {
     visibility: visible;
 }
 
+#toggle-settings-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 30; /* UIパネルより手前に表示 */
+    padding: 10px 15px;
+    background-color: #95a5a6;
+    border: none;
+    color: var(--text-color);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+}
+
+#toggle-settings-button:hover {
+    background-color: #7f8c8d;
+}
+
+.panel.hidden {
+    display: none;
+}
+
 /* パネルの共通スタイル (index.html用) */
 .panel {
     position: fixed;
@@ -169,7 +192,7 @@ video {
 
 /* jankenページのパネルスタイル */
 #game-ui-container .panel {
-    width: 320px;
+    width: 400px;
     pointer-events: auto; /* パネル部分はクリック有効化 */
     background-color: var(--panel-background);
     color: var(--text-color);

@@ -4,9 +4,9 @@ const audio = {}; // Audioオブジェクトをキャッシュするオブジェ
 let latestLandmarks = null; // 最新の顔ランドマーク情報
 
 const settings = {
-    eyeThreshold: 0.15,
-    mouthThreshold: 0.15,
-    openEyeMultiplier: 1.3
+    eyeThreshold: 0.25, //スライドバーの初期値
+    mouthThreshold: 0.25, //スライドバーの初期値
+    openEyeMultiplier: 1.0
 };
 
 const HANDS = { rock: '✊ グー', scissors: '✌️ チョキ', paper: '✋ パー' };
@@ -247,10 +247,10 @@ function determinePlayerHand(snapshot) {
     // if (isRightWink) {
     //     return 'scissors';
     // }
-    if (snapshot.leftEye > settings.eyeThreshold * settings.openEyeMultiplier) {
+    if (snapshot.leftEye < settings.eyeThreshold * settings.openEyeMultiplier) {
         return 'scissors';
     }
-    else if (snapshot.rightEye > settings.eyeThreshold * settings.openEyeMultiplier) {
+    else if (snapshot.rightEye < settings.eyeThreshold * settings.openEyeMultiplier) {
         return 'scissors';
     }
     else if (snapshot.mouth > settings.mouthThreshold) {

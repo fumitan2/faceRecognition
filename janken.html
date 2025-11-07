@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>じゃんけんv0.0.1</title>
+    <title>じゃんけんv0.0.2</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="janken-page">
@@ -41,14 +41,15 @@
             <p>右目 開き具合: <span id="right-eye-value">-</span></p>
             <p>口 開き具合: <span id="mouth-value">-</span></p>
             <hr>
-            <h4>感度設定</h4>
+            <h4>閾値設定</h4>
+            <!-- 初期値はJSで上書き -->
             <div class="control-item">
-                <label for="eye-threshold-slider">目の閾値 (小さいと閉じやすい): <span id="eye-threshold-value">0.15</span></label>
-                <input type="range" id="eye-threshold-slider" min="0.1" max="0.4" step="0.01" value="0.15">
+                <label for="eye-threshold-slider">目の閉じ: <span id="eye-threshold-value">0.1</span></label>
+                <input type="range" id="eye-threshold-slider" min="0.1" max="0.8" step="0.05" value="0.1">
             </div>
             <div class="control-item">
-                <label for="mouth-threshold-slider">口の閾値 (小さいと開きやすい): <span id="mouth-threshold-value">0.15</span></label>
-                <input type="range" id="mouth-threshold-slider" min="0.05" max="0.4" step="0.01" value="0.15">
+                <label for="mouth-threshold-slider">口の開き: <span id="mouth-threshold-value">0.1</span></label>
+                <input type="range" id="mouth-threshold-slider" min="0.05" max="0.4" step="0.05" value="0.1">
             </div>
             <hr>
             <h4>「ポン」の瞬間の値</h4>
